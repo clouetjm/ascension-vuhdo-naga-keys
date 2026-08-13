@@ -17,8 +17,7 @@ VUHDO_FAST_ACCESS_ACTIONS = { };
 
 local VUHDO_NAGA_KEY_SPELLS = {
 	[1]  = "Repair Shot",                    -- touche "1"  soin direct (2s)
-	[2]  = "target",                         -- touche "2"  TEST : cible l'allie survole
-	                                         --             remettre "Zap!" une fois valide
+	[2]  = "Zap!",                           -- touche "2"  instantane, longue portee
 	[3]  = "Nanobot Reconstruction",         -- touche "3"  HoT
 	[4]  = "Nanobot Cleanser",               -- touche "4"  dissipe poison / maladie
 	[5]  = "Med Pack",                       -- touche "5"  urgence
