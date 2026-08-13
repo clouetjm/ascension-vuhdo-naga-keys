@@ -20,54 +20,62 @@ VUHDO_FAST_ACCESS_ACTIONS = { };
 
 local VUHDO_NAGA_KEY_SPELLS = {
 
-	-- Sans modificateur : le coeur du soin.
+	-- Sans modificateur : soins et support cibles sur un allie.
 	[""] = {
-		[1]  = "Repair Shot",                     -- soin direct        lv2
-		[2]  = "Nanobot Reconstruction",          -- HoT                lv10
-		[3]  = "Nanobot Cleanser",                -- dissipe            lv11
-		[4]  = "Med Pack",                        -- urgence            lv16
-		[5]  = "Defibrillate",                    -- reanimation        lv10
-		[6]  = "Nanobot Swarm",                   -- menace / degats    lv27
-		[7]  = "Build: Restorative Beacon",       -- zone de soin       talent
-		[8]  = "Build: Shield Beacon",            -- bouclier de zone   lv14
-		[9]  = "Build: Replenishment Beacon",     -- ravitaillement     lv1
-		[10] = "My Greatest Invention!",          -- CD AoE             lv1
-		[11] = "Build: Alarm Beacon",             -- peur/charme/sommeil lv1
-		[12] = "Build: Battery Recharge Station", -- mana               talent
+		[1]  = "Repair Shot",                     -- soin direct          lv2
+		[2]  = "Nanobot Reconstruction",          -- HoT                  lv10
+		[3]  = "Nanobot Cleanser",                -- dissipe              lv11
+		[4]  = "Med Pack",                        -- urgence              lv16
+		[5]  = "Defibrillate",                    -- reanimation          lv10
+		[6]  = "Maxi-Cleanser X-420",             -- dissipe ameliore     talent
+		[7]  = "Emergency Module",                -- defensif             talent
+		[8]  = "Guardian Module",                 -- defensif             talent
+		[9]  = "Stim Augmentation",               -- hors classe, possede
+		[10] = "Nanobot Swarm",                   -- menace / degats      lv27
+		[11] = "Nanobot Deconstruction",          -- degats               talent
+		[12] = "My Greatest Invention!",          -- CD AoE               lv1
 	},
 
-	-- SHIFT : capacites issues de l'arbre de talents. A remplir au fur
-	-- et a mesure que tu les prends. Candidats releves dans la base :
-	--   Magic-Cleanser 4000X, Maxi-Cleanser X-420, Healing Radiator,
-	--   Rejuvenating Gadget, Bandage Gun, Emergency Module,
-	--   Guardian Module, Build: ZIGGI-6K, Overcharge, Freeze Ray, E.M.P
-	-- Attention : certaines sont des PASSIFS, donc non lancables.
-	-- Verifie avec  /run print(GetSpellInfo("<nom>"))  avant d'ajouter.
-	-- Stim Augmentation : absent de la base Tinker mais present dans TON
-	-- grimoire (verifie en jeu). Le mode classless d'Ascension permet de
-	-- prendre des sorts hors classe : la base du site n'est donc pas
-	-- l'autorite finale, ton grimoire l'est.
+	-- SHIFT : tout ce qui se pose au sol.
 	["shift-"] = {
-		[1]  = "Stim Augmentation",
-		[2]  = "", [3]  = "", [4]  = "",
-		[5]  = "", [6]  = "", [7]  = "", [8]  = "",
-		[9]  = "", [10] = "", [11] = "", [12] = "",
+		[1]  = "Build: Restorative Beacon",       -- zone de soin         talent
+		[2]  = "Build: Shield Beacon",            -- bouclier de zone     lv14
+		[3]  = "Build: Replenishment Beacon",     -- ravitaillement       lv1
+		[4]  = "Build: Alarm Beacon",             -- peur/charme/sommeil  lv1
+		[5]  = "Build: Battery Recharge Station", -- mana                 talent
+		[6]  = "Build: ZIGGI-6K",                 -- deployable           talent
+		[7]  = "Build: Bounce Pad!",              -- mobilite             lv1
+		[8]  = "Build: Portable Sawmill",         -- utilitaire           lv14
+		[9]  = "Overcharge",                      -- survolte les balises talent
+		[10] = "Battery Swap",                    -- talent
+		[11] = "",
+		[12] = "",
 	},
 
-	-- CTRL : utilitaire et degats. Candidats verifies actifs :
-	--   Sticky Bomb (lv4), Deploy Blast Mine (lv1), Power Module (lv4),
-	--   'Pick Lock' (lv14), Build: Bounce Pad! (lv1), Minicopter-Z (lv30),
-	--   Landstrider Keys (lv1), Build: Portable Sawmill (lv14)
+	-- CTRL : utilitaire, mobilite, controle.
 	["ctrl-"] = {
-		[1]  = "", [2]  = "", [3]  = "", [4]  = "",
-		[5]  = "", [6]  = "", [7]  = "", [8]  = "",
-		[9]  = "", [10] = "", [11] = "", [12] = "",
+		[1]  = "Freeze Ray",                      -- controle             talent
+		[2]  = "E.M.P",                           -- talent
+		[3]  = "Anti-Magic Grenades",             -- talent
+		[4]  = "Invisibility Cloak",              -- talent
+		[5]  = "Rocket Boots",                    -- mobilite             talent
+		[6]  = "Parachute Pack",                  -- talent
+		[7]  = "Warphole Generator",              -- talent
+		[8]  = "Tinkering Tools",                 -- talent
+		[9]  = "'Pick Lock'",                     -- lv14
+		[10] = "Landstrider Keys",                -- monture              lv1
+		[11] = "Minicopter-Z",                    -- monture              lv30
+		[12] = "",
 	},
 
-	-- ALT : libre.
+	-- ALT : degats et explosifs.
 	["alt-"] = {
-		[1]  = "", [2]  = "", [3]  = "", [4]  = "",
-		[5]  = "", [6]  = "", [7]  = "", [8]  = "",
+		[1]  = "Sticky Bomb",                     -- lv4
+		[2]  = "Deploy Blast Mine",               -- lv1
+		[3]  = "Power Module",                    -- lv4
+		[4]  = "Remote Detonation",               -- talent
+		[5]  = "Deathball",                       -- talent
+		[6]  = "", [7]  = "", [8]  = "",
 		[9]  = "", [10] = "", [11] = "", [12] = "",
 	},
 };
