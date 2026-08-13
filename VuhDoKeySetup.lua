@@ -11,24 +11,76 @@ VUHDO_FAST_ACCESS_ACTIONS = { };
 -- Le client tourne en locale enUS : GetSpellInfo() et /cast attendent
 -- l'anglais. L'addon AscensionFR ne traduit que l'AFFICHAGE, pas l'API.
 --
--- Tinker / Invention (healer). Slots 1-6 : sorts ciblables sur un allie,
--- ils profitent vraiment du survol de frame. Slots 7-12 : zones et
--- deployables, non cibles sur allie, simplement gardes sous la main.
+-- Tinker / Invention (healer). Noms verifies sur db.ascension.gg
+-- (classe 28, competence Invention = 100, base Tinker = 480).
+--
+-- Quatre jeux de 12 touches, selon le modificateur enfonce.
+-- Laisser "" pour desactiver un slot ; un slot dont le sort n'est pas
+-- appris reste inerte et rend la touche a son binding global.
 
 local VUHDO_NAGA_KEY_SPELLS = {
-	[1]  = "Repair Shot",                    -- touche "1"  soin direct (2s)
-	[2]  = "Zap!",                           -- touche "2"  instantane, longue portee
-	[3]  = "Nanobot Reconstruction",         -- touche "3"  HoT
-	[4]  = "Nanobot Cleanser",               -- touche "4"  dissipe poison / maladie
-	[5]  = "Med Pack",                       -- touche "5"  urgence
-	[6]  = "Stim Augmentation",              -- touche "6"  augment (splash des soins directs)
-	[7]  = "Build: Restorative Beacon",      -- touche "7"  zone de soin
-	[8]  = "Build: Shield Beacon",           -- touche "8"  bouclier de zone (possede des lv17)
-	                                         --             alternative plus tard : "Build: ZIGGI-6K"
-	[9]  = "Build: Battery Recharge Station",-- touche "9"  mana
-	[10] = "My Greatest Invention!",         -- touche "0"  CD AoE
-	[11] = "Build: Alarm Beacon",            -- touche ")"  dissipe peur / charme / sommeil
-	[12] = "Build: Noise Box",               -- touche "="  interruption
+
+	-- Sans modificateur : le coeur du soin.
+	[""] = {
+		[1]  = "Repair Shot",                     -- soin direct        lv2
+		[2]  = "Nanobot Reconstruction",          -- HoT                lv10
+		[3]  = "Nanobot Cleanser",                -- dissipe            lv11
+		[4]  = "Med Pack",                        -- urgence            lv16
+		[5]  = "Defibrillate",                    -- reanimation        lv10
+		[6]  = "Nanobot Swarm",                   -- menace / degats    lv27
+		[7]  = "Build: Restorative Beacon",       -- zone de soin       talent
+		[8]  = "Build: Shield Beacon",            -- bouclier de zone   lv14
+		[9]  = "Build: Replenishment Beacon",     -- ravitaillement     lv1
+		[10] = "My Greatest Invention!",          -- CD AoE             lv1
+		[11] = "Build: Alarm Beacon",             -- peur/charme/sommeil lv1
+		[12] = "Build: Battery Recharge Station", -- mana               talent
+	},
+
+	-- SHIFT : capacites issues de l'arbre de talents. A remplir au fur
+	-- et a mesure que tu les prends. Candidats releves dans la base :
+	--   Magic-Cleanser 4000X, Maxi-Cleanser X-420, Healing Radiator,
+	--   Rejuvenating Gadget, Bandage Gun, Emergency Module,
+	--   Guardian Module, Build: ZIGGI-6K, Overcharge, Freeze Ray, E.M.P
+	-- Attention : certaines sont des PASSIFS, donc non lancables.
+	-- Verifie avec  /run print(GetSpellInfo("<nom>"))  avant d'ajouter.
+	-- Stim Augmentation : absent de la base Tinker mais present dans TON
+	-- grimoire (verifie en jeu). Le mode classless d'Ascension permet de
+	-- prendre des sorts hors classe : la base du site n'est donc pas
+	-- l'autorite finale, ton grimoire l'est.
+	["shift-"] = {
+		[1]  = "Stim Augmentation",
+		[2]  = "", [3]  = "", [4]  = "",
+		[5]  = "", [6]  = "", [7]  = "", [8]  = "",
+		[9]  = "", [10] = "", [11] = "", [12] = "",
+	},
+
+	-- CTRL : utilitaire et degats. Candidats verifies actifs :
+	--   Sticky Bomb (lv4), Deploy Blast Mine (lv1), Power Module (lv4),
+	--   'Pick Lock' (lv14), Build: Bounce Pad! (lv1), Minicopter-Z (lv30),
+	--   Landstrider Keys (lv1), Build: Portable Sawmill (lv14)
+	["ctrl-"] = {
+		[1]  = "", [2]  = "", [3]  = "", [4]  = "",
+		[5]  = "", [6]  = "", [7]  = "", [8]  = "",
+		[9]  = "", [10] = "", [11] = "", [12] = "",
+	},
+
+	-- ALT : libre.
+	["alt-"] = {
+		[1]  = "", [2]  = "", [3]  = "", [4]  = "",
+		[5]  = "", [6]  = "", [7]  = "", [8]  = "",
+		[9]  = "", [10] = "", [11] = "", [12] = "",
+	},
+};
+
+-- Correspondance modificateur -> prefixe d'attribut / prefixe de binding.
+-- Cote attribut c'est minuscule ("shift-type-w5"), cote binding c'est
+-- majuscule ("SHIFT-1") : c'est la convention de WoW, et celle que VuhDo
+-- suit deja pour la molette ("ALT-MOUSEWHEELUP" / cle "alt-").
+local VUHDO_NAGA_MODIFIERS = {
+	{ Attr = "",       Bind = ""       },
+	{ Attr = "shift-", Bind = "SHIFT-" },
+	{ Attr = "ctrl-",  Bind = "CTRL-"  },
+	{ Attr = "alt-",   Bind = "ALT-"   },
 };
 
 -- Noms releves en jeu (AZERTY, capture OnKeyDown) : WoW normalise les dix
@@ -49,15 +101,23 @@ local VUHDO_NAGA_CLICK_IDS = {
 -- slot. L'assemblage final se fait plus bas, en ne gardant que les sorts
 -- reellement appris : un sort pas encore connu ne doit pas confisquer la
 -- touche pendant le survol, sinon la macro offensive globale ne part plus.
+-- Indexe par prefixe d'attribut, puis par slot.
 local VUHDO_NAGA_BINDING_LINES = { };
-for tNagaInit = 1, 12 do
-	local tNagaSpellInit = VUHDO_NAGA_KEY_SPELLS[tNagaInit];
-	-- string.gsub plutot que strtrim : ce bloc tourne au chargement du
-	-- fichier, avant que les globales FrameXML soient garanties.
-	if (tNagaSpellInit ~= nil and string.gsub(tNagaSpellInit, "%s", "") ~= "") then
-		VUHDO_NAGA_BINDING_LINES[tNagaInit] =
-			"self:SetBindingClick(0, \"" .. VUHDO_NAGA_PHYSICAL_KEYS[tNagaInit]
-			.. "\", self:GetName(), \"" .. VUHDO_NAGA_CLICK_IDS[tNagaInit] .. "\");\n";
+for _, tNagaModi in ipairs(VUHDO_NAGA_MODIFIERS) do
+	local tNagaSet = VUHDO_NAGA_KEY_SPELLS[tNagaModi.Attr];
+	VUHDO_NAGA_BINDING_LINES[tNagaModi.Attr] = { };
+
+	if (tNagaSet ~= nil) then
+		for tNagaInit = 1, 12 do
+			local tNagaSpellInit = tNagaSet[tNagaInit];
+			-- string.gsub plutot que strtrim : ce bloc tourne au chargement
+			-- du fichier, avant que les globales FrameXML soient garanties.
+			if (tNagaSpellInit ~= nil and string.gsub(tNagaSpellInit, "%s", "") ~= "") then
+				VUHDO_NAGA_BINDING_LINES[tNagaModi.Attr][tNagaInit] =
+					"self:SetBindingClick(0, \"" .. tNagaModi.Bind .. VUHDO_NAGA_PHYSICAL_KEYS[tNagaInit]
+					.. "\", self:GetName(), \"" .. VUHDO_NAGA_CLICK_IDS[tNagaInit] .. "\");\n";
+			end
+		end
 	end
 end
 -- Sorts REELLEMENT appris. GetSpellInfo() ne convient pas comme filtre :
@@ -67,6 +127,8 @@ end
 -- ou le grimoire repond ; refais /reload apres avoir appris un sort.
 local VUHDO_NAGA_KNOWN = nil;
 local function VUHDO_nagaIsKnown(aName)
+	if (aName == nil or aName == "") then return false; end
+
 	-- Mots-cles VuhDo : ce ne sont pas des sorts, toujours valides.
 	local tLow = strlower(aName);
 	if (tLow == VUHDO_SPELL_KEY_TARGET or tLow == VUHDO_SPELL_KEY_ASSIST
@@ -376,18 +438,27 @@ function VUHDO_setupAllHealButtonAttributes(aButton, aUnit, anIsDisable, aForceT
 		and VUHDO_BUTTON_CACHE[aButton] ~= nil
 		and aButton["target"] ~= "focus" and aButton["target"] ~= "target") then
 
-		for tNagaIndex = 1, 12 do
-			local tNagaSpell = VUHDO_NAGA_KEY_SPELLS[tNagaIndex];
-			-- Le slot ne s'active qu'une fois le sort REELLEMENT appris.
-			-- Les autres touches restent libres pour leur binding global.
-			if (VUHDO_NAGA_BINDING_LINES[tNagaIndex] ~= nil
-				and VUHDO_nagaIsKnown(tNagaSpell)) then
+		for _, tNagaModi in ipairs(VUHDO_NAGA_MODIFIERS) do
+			local tNagaSet = VUHDO_NAGA_KEY_SPELLS[tNagaModi.Attr];
+			local tNagaLines = VUHDO_NAGA_BINDING_LINES[tNagaModi.Attr];
 
-				-- Le "-" n'est PAS decoratif : SecureButton_GetButtonSuffix()
-				-- renvoie "-"..bouton pour tout nom non standard. Le clic sur
-				-- "w5" fait donc chercher l'attribut "type-w5", pas "typew5".
-				tNagaSnippet = tNagaSnippet .. VUHDO_NAGA_BINDING_LINES[tNagaIndex];
-				VUHDO_setupHealButtonAttributes("", "-" .. VUHDO_NAGA_CLICK_IDS[tNagaIndex], tNagaSpell, aButton, false);
+			if (tNagaSet ~= nil and tNagaLines ~= nil) then
+				for tNagaIndex = 1, 12 do
+					local tNagaSpell = tNagaSet[tNagaIndex];
+					-- Le slot ne s'active qu'une fois le sort REELLEMENT appris.
+					-- Les autres touches restent libres pour leur binding global.
+					if (tNagaLines[tNagaIndex] ~= nil
+						and VUHDO_nagaIsKnown(tNagaSpell)) then
+
+						-- Le "-" n'est PAS decoratif : SecureButton_GetButtonSuffix()
+						-- renvoie "-"..bouton pour tout nom non standard. Le clic sur
+						-- "w5" fait donc chercher l'attribut "type-w5", pas "typew5".
+						-- Avec modificateur cela donne "shift-type-w5".
+						tNagaSnippet = tNagaSnippet .. tNagaLines[tNagaIndex];
+						VUHDO_setupHealButtonAttributes(tNagaModi.Attr,
+							"-" .. VUHDO_NAGA_CLICK_IDS[tNagaIndex], tNagaSpell, aButton, false);
+					end
+				end
 			end
 		end
 	end
