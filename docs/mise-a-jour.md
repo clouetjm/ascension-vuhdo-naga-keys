@@ -37,6 +37,8 @@ Sans ça, le panneau d'options refuse de se charger.
 
 Enfin, passer `VuhDo` et `VuhDoOptions` en `disabled` dans les `AddOns.txt`. Les deux versions chargées simultanément partageraient les variables globales `VUHDO_*`.
 
+**5. Les fichiers de configuration.** Reconstruire le dossier efface `VuhDoNagaConfig.lua`, qui n'est pas versionné. Le script le met à l'abri avant, et le restaure après. Il réinstalle aussi `VuhDoNagaConfig.dist.lua` et redéclare les deux fichiers dans le `.toc` — ces déclarations disparaissent à chaque reconstruction, puisque le `.toc` est recopié depuis l'original.
+
 ## Quand Ascension met VuhDo à jour
 
 Rien n'est cassé si vous ne faites rien : le fork continue de tourner sur son ancienne version. Ne bougez que si vous voulez la mise à jour.

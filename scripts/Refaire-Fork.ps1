@@ -43,6 +43,17 @@ if (-not (Test-Path (Join-Path $addons "VuhDo\VuhDo.toc"))) {
 
 $premierFork = -not (Test-Path (Join-Path $addons "VuhDoNaga"))
 
+# --- Mise a l'abri de la configuration personnelle --------------------
+# VuhDoNagaConfig.lua n'est pas versionne : il ne doit surtout pas
+# disparaitre quand on reconstruit le dossier.
+$confLocale = Join-Path $addons "VuhDoNaga\VuhDoNagaConfig.lua"
+$confSauve = $null
+if (Test-Path $confLocale) {
+    $confSauve = Join-Path $env:TEMP "VuhDoNagaConfig.sauve.lua"
+    Copy-Item $confLocale $confSauve -Force
+    Write-Host "Configuration personnelle mise a l'abri." -ForegroundColor DarkGray
+}
+
 # --- Le fichier patche est-il applicable ? ---------------------------
 $injecter = $false
 if ($patch -and (Test-Path $patch)) {
@@ -110,6 +121,42 @@ if (Test-Path $tocOpt) {
 if ($injecter) {
     Copy-Item $patch (Join-Path $addons "VuhDoNaga\VuhDoKeySetup.lua") -Force
     Write-Host "Patch injecte." -ForegroundColor Green
+}
+
+# --- Fichiers de configuration ---------------------------------------
+$distSrc = Join-Path $PSScriptRoot "..\VuhDoNagaConfig.dist.lua"
+if (Test-Path $distSrc) {
+    Copy-Item $distSrc (Join-Path $addons "VuhDoNaga\VuhDoNagaConfig.dist.lua") -Force
+    Write-Host "Configuration par defaut installee." -ForegroundColor Green
+}
+if ($confSauve -ne $null) {
+    Copy-Item $confSauve $confLocale -Force
+    Remove-Item $confSauve -Force
+    Write-Host "Configuration personnelle restauree." -ForegroundColor Green
+}
+
+# --- Declaration des configs dans le .toc -----------------------------
+# L'ordre compte : le local est charge apres le defaut et le surcharge.
+$toc = Join-Path $addons "VuhDoNaga\VuhDoNaga.toc"
+$txt = $enc.GetString([System.IO.File]::ReadAllBytes($toc))
+if ($txt -notmatch 'VuhDoNagaConfig\.dist\.lua') {
+    $ancre = "VuhDo.xml"
+    $i = $txt.IndexOf($ancre)
+    if ($i -ge 0) {
+        $ajout = "# Configuration des touches Naga. L'ordre compte : le fichier local est`r`n" +
+                 "# charge apres le fichier par defaut et le surcharge. Il est facultatif,`r`n" +
+                 "# WoW ignore silencieusement un fichier absent.`r`n" +
+                 "VuhDoNagaConfig.dist.lua`r`nVuhDoNagaConfig.lua`r`n`r`n" + $ancre
+        # Uniquement la premiere occurrence, d'ou Remove/Insert plutot que Replace.
+        $txt = $txt.Remove($i, $ancre.Length).Insert($i, $ajout)
+        [System.IO.File]::WriteAllBytes($toc, $enc.GetBytes($txt))
+        Write-Host "Fichiers de configuration declares dans le .toc." -ForegroundColor Green
+    } else {
+        Write-Host "ATTENTION : ancre VuhDo.xml introuvable dans le .toc." -ForegroundColor Yellow
+        Write-Host "Ajoute a la main, avant VuhDo.xml :"
+        Write-Host "   VuhDoNagaConfig.dist.lua"
+        Write-Host "   VuhDoNagaConfig.lua"
+    }
 }
 
 # --- SavedVariables : uniquement au premier fork ----------------------

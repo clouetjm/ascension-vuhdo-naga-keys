@@ -5,96 +5,28 @@ VUHDO_FAST_ACCESS_ACTIONS = { };
 
 -- NAGA LOCAL KEYS ------------------------------------------------
 -- Sorts declenches par les 12 touches UNIQUEMENT pendant le survol
--- d'une frame VuhDo. Laisser "" pour desactiver un slot.
+-- d'une frame VuhDo.
 --
--- IMPORTANT : le nom doit etre le nom ANGLAIS du sort.
--- Le client tourne en locale enUS : GetSpellInfo() et /cast attendent
--- l'anglais. L'addon AscensionFR ne traduit que l'AFFICHAGE, pas l'API.
+-- La configuration ne vit PAS dans ce fichier. Elle est lue depuis
+-- deux fichiers charges avant celui-ci par le .toc :
 --
--- Tinker / Invention (healer). Noms verifies sur db.ascension.gg
--- (classe 28, competence Invention = 100, base Tinker = 480).
+--   VuhDoNagaConfig.dist.lua -> VUHDO_NAGA_CONFIG_DEFAUT  (versionne)
+--   VuhDoNagaConfig.lua      -> VUHDO_NAGA_CONFIG         (local, optionnel)
 --
--- Quatre jeux de 12 touches, selon le modificateur enfonce.
--- Laisser "" pour desactiver un slot ; un slot dont le sort n'est pas
--- appris reste inerte et rend la touche a son binding global.
+-- Le local surcharge le defaut jeu de touches par jeu de touches :
+-- ne redefinir que ["shift-"] laisse les trois autres au defaut.
+-- WoW ignore silencieusement un fichier absent du .toc, le local est
+-- donc reellement optionnel. Meme principe qu'un .env.dist/.env.local.
 
-local VUHDO_NAGA_KEY_SPELLS = {
-
-	-- Sans modificateur : soins et support cibles sur un allie.
-	[""] = {
-		[1]  = "Repair Shot",                     -- soin direct          lv2
-		[2]  = "Nanobot Reconstruction",          -- HoT                  lv10
-		[3]  = "Nanobot Cleanser",                -- dissipe              lv11
-		[4]  = "Med Pack",                        -- urgence              lv16
-		[5]  = "Defibrillate",                    -- reanimation          lv10
-		[6]  = "Maxi-Cleanser X-420",             -- dissipe ameliore     talent
-		[7]  = "Emergency Module",                -- defensif             talent
-		[8]  = "Guardian Module",                 -- defensif             talent
-		[9]  = "Stim Augmentation",               -- hors classe, possede
-		[10] = "My Greatest Invention!",          -- CD AoE               lv1
-		[11] = "",
-		[12] = "",
-		-- Retires car cibles sur un ennemi : la macro construite par VuhDo
-		-- vise l'allie survole avec un conditionnel "help", un sort
-		-- offensif y repond "pas de cible valide" et la touche est perdue.
-		--   Nanobot Swarm (lv27), Nanobot Deconstruction (talent)
-	},
-
-	-- SHIFT : tout ce qui se pose au sol.
-	["shift-"] = {
-		[1]  = "Build: Restorative Beacon",       -- zone de soin         talent
-		[2]  = "Build: Shield Beacon",            -- bouclier de zone     lv14
-		[3]  = "Build: Replenishment Beacon",     -- ravitaillement       lv1
-		[4]  = "Build: Alarm Beacon",             -- peur/charme/sommeil  lv1
-		[5]  = "Build: Battery Recharge Station", -- mana                 talent
-		[6]  = "Build: ZIGGI-6K",                 -- deployable           talent
-		[7]  = "Build: Bounce Pad!",              -- mobilite             lv1
-		[8]  = "Build: Portable Sawmill",         -- utilitaire           lv14
-		[9]  = "Overcharge",                      -- survolte les balises talent
-		[10] = "Battery Swap",                    -- talent
-		[11] = "",
-		[12] = "",
-	},
-
-	-- CTRL : utilitaire et mobilite, sur soi. Rien de cible sur un ennemi.
-	["ctrl-"] = {
-		[1]  = "Invisibility Cloak",              -- talent
-		[2]  = "Rocket Boots",                    -- mobilite             talent
-		[3]  = "Parachute Pack",                  -- talent
-		[4]  = "Warphole Generator",              -- talent
-		[5]  = "Tinkering Tools",                 -- talent
-		[6]  = "'Pick Lock'",                     -- lv14
-		[7]  = "Landstrider Keys",                -- monture              lv1
-		[8]  = "Minicopter-Z",                    -- monture              lv30
-		[9]  = "", [10] = "", [11] = "", [12] = "",
-		-- Retires car cibles sur un ennemi :
-		--   Freeze Ray, E.M.P, Anti-Magic Grenades
-	},
-
-	-- ALT : libre. Le jeu contenait les explosifs (Sticky Bomb,
-	-- Deploy Blast Mine, Power Module, Remote Detonation, Deathball) :
-	-- tous cibles sur un ennemi, donc inutilisables par ce mecanisme.
-	-- Les touches ALT restent ainsi disponibles pour tes bindings
-	-- habituels, y compris pendant le survol d'une frame.
-	["alt-"] = {
-		[1]  = "", [2]  = "", [3]  = "", [4]  = "",
-		[5]  = "", [6]  = "", [7]  = "", [8]  = "",
-		[9]  = "", [10] = "", [11] = "", [12] = "",
-	},
-};
-
--- Correspondance modificateur -> prefixe de binding / prefixe d'identifiant.
+-- Key = cle dans la table SPELLS, Bind = prefixe de touche,
+-- Id = prefixe de l'identifiant de clic.
 --
 -- On N'UTILISE PAS le prefixe d'attribut de WoW ("shift-type-...").
 -- Teste en jeu : avec un identifiant de clic partage entre les quatre
--- combinaisons, SHIFT-1 et ALT-1 retombaient sur l'attribut non modifie
--- et lancaient le sort du jeu de base, alors que "shift-type-..." et
--- "alt-type-..." etaient pourtant bien poses.
---
--- Chaque combinaison a donc son PROPRE identifiant de clic (vd / vds /
--- vdc / vda), et l'attribut reste non prefixe. Aucune ambiguite possible.
--- Key = cle dans VUHDO_NAGA_KEY_SPELLS, Bind = prefixe de touche,
--- Id = prefixe de l'identifiant de clic.
+-- combinaisons, SHIFT-1 et ALT-1 retombaient sur l'attribut non
+-- modifie et lancaient le sort du jeu de base, alors que les attributs
+-- prefixes etaient pourtant bien poses. Chaque combinaison a donc son
+-- propre identifiant de clic, et l'attribut reste non prefixe.
 local VUHDO_NAGA_MODIFIERS = {
 	{ Key = "",       Bind = "",       Id = "vd"  },
 	{ Key = "shift-", Bind = "SHIFT-", Id = "vds" },
@@ -102,10 +34,23 @@ local VUHDO_NAGA_MODIFIERS = {
 	{ Key = "alt-",   Bind = "ALT-",   Id = "vda" },
 };
 
--- Noms releves en jeu (AZERTY, capture OnKeyDown) : WoW normalise les dix
--- premieres touches en chiffres malgre le layout, mais PAS la onzieme,
--- qui remonte en ")" et non en "-". Slot 12 a confirmer.
-local VUHDO_NAGA_PHYSICAL_KEYS = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ")", "=" };
+local tNagaDefaut = VUHDO_NAGA_CONFIG_DEFAUT or { };
+local tNagaLocal  = VUHDO_NAGA_CONFIG or { };
+
+-- Noms des touches tels que WoW les rapporte. Repli en dur si aucun
+-- fichier de configuration n'a ete charge.
+local VUHDO_NAGA_PHYSICAL_KEYS =
+	tNagaLocal.KEYS or tNagaDefaut.KEYS
+	or { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ")", "=" };
+
+-- Fusion defaut / local, jeu de touches par jeu de touches.
+local VUHDO_NAGA_KEY_SPELLS = { };
+for _, tNagaModi in ipairs(VUHDO_NAGA_MODIFIERS) do
+	VUHDO_NAGA_KEY_SPELLS[tNagaModi.Key] =
+		(tNagaLocal.SPELLS and tNagaLocal.SPELLS[tNagaModi.Key])
+		or (tNagaDefaut.SPELLS and tNagaDefaut.SPELLS[tNagaModi.Key])
+		or { };
+end
 
 -- Identifiants de clic, construits en "<prefixe><slot>" : vd1..vd12 sans
 -- modificateur, vds1..vds12 en SHIFT, vdc en CTRL, vda en ALT. Soit 48

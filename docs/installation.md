@@ -5,59 +5,98 @@
 - Project Ascension installé, avec l'addon VuhDo (fourni par le launcher)
 - Le jeu **fermé**
 
-Repère d'abord ton dossier `AddOns`. Il dépend de l'emplacement du launcher, typiquement :
+Repérez d'abord votre dossier `AddOns`, typiquement :
 
 ```
 <installation>\resources\ascension-live\Interface\AddOns
 ```
 
-## Option A — patch simple
+## 1. Les fichiers
 
-Le plus rapide, mais le launcher écrasera le fichier à chaque lancement du jeu.
+Copiez dans le dossier `VuhDo` (ou `VuhDoNaga` si vous faites le fork, voir plus bas) :
 
-1. Sauvegarde ton `VuhDo\VuhDoKeySetup.lua` d'origine.
-2. Remplace-le par celui de ce dépôt.
-3. Ouvre-le et remplis `VUHDO_NAGA_KEY_SPELLS` avec tes sorts (noms **anglais**).
-4. Lance le jeu, puis `/reload`.
+| Fichier du dépôt | Rôle |
+|---|---|
+| `VuhDoKeySetup.lua` | remplace celui d'origine — **sauvegardez l'ancien** |
+| `VuhDoNagaConfig.dist.lua` | configuration par défaut |
 
-Après chaque lancement du jeu, il faudra recopier le fichier. D'où l'option B.
+Puis créez **votre** configuration en copiant le fichier par défaut :
 
-## Option B — fork local (recommandé)
+```
+VuhDoNagaConfig.dist.lua  →  VuhDoNagaConfig.lua
+```
 
-On fait tourner VuhDo sous un nom que le launcher ne connaît pas. Il continue de gérer ses propres dossiers, sans effet sur le tien.
+C'est cette copie que vous éditez. Elle n'est pas versionnée, donc jamais écrasée par une mise à jour du dépôt.
 
-`scripts/Refaire-Fork.ps1` fait tout : ouvre-le et ajuste les deux chemins en tête de fichier, puis lance-le (clic droit → Exécuter avec PowerShell), jeu fermé.
+## 2. Déclarer les fichiers dans le `.toc`
 
-Il crée `VuhDoNaga` et `VuhDoNagaOptions`, réécrit les chemins internes, copie ta configuration et désactive les addons d'origine.
+WoW ne charge que ce qui est listé dans le `.toc` de l'addon. Ouvrez `VuhDo.toc` (ou `VuhDoNaga.toc`) et ajoutez ces deux lignes **avant** `VuhDo.xml` :
 
-Au premier lancement, à l'écran de sélection des personnages, ouvre le menu **AddOns** et vérifie que `VuhDoNaga` et `VuhDoNagaOptions` sont cochés, et que `VuhDo` / `VuhDoOptions` ne le sont pas. Les deux versions actives en même temps partageraient les variables globales `VUHDO_*` et se marcheraient dessus.
+```
+VuhDoNagaConfig.dist.lua
+VuhDoNagaConfig.lua
+```
 
-## Adapter les touches
+L'ordre compte : le fichier local est chargé après le fichier par défaut, et le surcharge. Le local est facultatif — WoW ignore silencieusement un fichier absent.
 
-Par défaut, `VUHDO_NAGA_PHYSICAL_KEYS` vaut :
+`VuhDoNaga.toc.exemple` à la racine du dépôt montre le résultat.
+
+## 3. Configurer vos sorts
+
+Dans `VuhDoNagaConfig.lua`, redéfinissez ce que vous voulez changer. Ce qui n'est pas redéfini reste au défaut :
 
 ```lua
-{ "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ")", "=" }
+VUHDO_NAGA_CONFIG = {
+    KEYS = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ")", "=" },
+    SPELLS = {
+        [""] = {
+            [1] = "Flash Heal",
+            [2] = "Renew",
+            [3] = "",            -- slot desactive
+            -- ...
+        },
+    },
+};
 ```
 
-C'est ce que remonte un **clavier AZERTY**. Sur un autre agencement, relève les noms réels avec la macro de capture (voir le README) et corrige cette ligne.
+Règles : noms **anglais** exacts avec leur ponctuation, `""` pour désactiver un slot, et un `/reload` après chaque modification.
 
-## Vérifier
-
-En jeu, pour lister les slots actifs :
-
-```
-/run local s="" for i=5,16 do for b in pairs(VUHDO_BUTTON_CACHE) do if b:GetAttribute("type-w"..i) then s=s.." "..(i-4) break end end end print("slots actifs:"..s)
-```
-
-Seuls les slots dont le sort est appris apparaissent. Survole ensuite une frame et presse la touche correspondante.
-
-Pour trouver le nom anglais exact de tes sorts :
+Pour trouver le nom exact de vos sorts :
 
 ```
 /run local i=1 while true do local n=GetSpellName(i,"spell") if not n then break end print(i,n) i=i+1 end
 ```
 
+Pour vérifier un nom précis (affiche le sort, ou `nil` s'il est faux) :
+
+```
+/run print(GetSpellInfo("Flash Heal"))
+```
+
+## 4. Adapter les touches
+
+`KEYS` contient les noms de touches **tels que WoW les rapporte**, qui ne correspondent pas toujours aux caractères imprimés — sur AZERTY, la onzième remonte en `)` et non en `-`. Pour relever les vôtres, collez ceci en jeu, pressez vos douze boutons, puis Échap :
+
+```
+/run local f=CreateFrame("Frame",nil,UIParent) f:EnableKeyboard(true) f:SetScript("OnKeyDown",function(s,k) print("TOUCHE: "..k) if k=="ESCAPE" then s:EnableKeyboard(false) end end)
+```
+
+## 5. Le fork (recommandé)
+
+Sans cela, le launcher Ascension écrasera `VuhDoKeySetup.lua` à chaque lancement du jeu.
+
+`scripts/Refaire-Fork.ps1` fait tout : ouvrez-le, ajustez les deux chemins en tête de fichier, et lancez-le jeu fermé (clic droit → Exécuter avec PowerShell). Il crée `VuhDoNaga` et `VuhDoNagaOptions`, réécrit les chemins internes, copie votre configuration VuhDo et désactive les addons d'origine.
+
+Au premier lancement, à l'écran de sélection des personnages, ouvrez le menu **AddOns** : `VuhDoNaga` et `VuhDoNagaOptions` cochés, `VuhDo` et `VuhDoOptions` décochés. Les deux versions actives en même temps partageraient les variables globales `VUHDO_*`.
+
+## 6. Vérifier
+
+```
+/run for _,p in ipairs({"vd","vds","vdc","vda"}) do local s="" for i=1,12 do for b in pairs(VUHDO_BUTTON_CACHE) do if b:GetAttribute("type-"..p..i) then s=s.." "..i break end end end print(p..":"..s) end
+```
+
+Affiche les slots actifs par jeu de touches. Seuls ceux dont le sort est appris apparaissent. Survolez ensuite une frame et pressez la touche correspondante.
+
 ## Désinstaller
 
-Jeu fermé : supprime `VuhDoNaga` et `VuhDoNagaOptions`, puis repasse `VuhDo` et `VuhDoOptions` en `enabled` dans `WTF\Account\<compte>\<royaume>\<perso>\AddOns.txt`. La configuration d'origine n'a jamais été modifiée, seulement copiée.
+Jeu fermé : supprimez `VuhDoNaga` et `VuhDoNagaOptions`, puis repassez `VuhDo` et `VuhDoOptions` en `enabled` dans `WTF\Account\<compte>\<royaume>\<perso>\AddOns.txt`. La configuration d'origine n'a jamais été modifiée, seulement copiée.
