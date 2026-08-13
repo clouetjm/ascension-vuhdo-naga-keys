@@ -80,15 +80,23 @@ local VUHDO_NAGA_KEY_SPELLS = {
 	},
 };
 
--- Correspondance modificateur -> prefixe d'attribut / prefixe de binding.
--- Cote attribut c'est minuscule ("shift-type-w5"), cote binding c'est
--- majuscule ("SHIFT-1") : c'est la convention de WoW, et celle que VuhDo
--- suit deja pour la molette ("ALT-MOUSEWHEELUP" / cle "alt-").
+-- Correspondance modificateur -> prefixe de binding / prefixe d'identifiant.
+--
+-- On N'UTILISE PAS le prefixe d'attribut de WoW ("shift-type-...").
+-- Teste en jeu : avec un identifiant de clic partage entre les quatre
+-- combinaisons, SHIFT-1 et ALT-1 retombaient sur l'attribut non modifie
+-- et lancaient le sort du jeu de base, alors que "shift-type-..." et
+-- "alt-type-..." etaient pourtant bien poses.
+--
+-- Chaque combinaison a donc son PROPRE identifiant de clic (vd / vds /
+-- vdc / vda), et l'attribut reste non prefixe. Aucune ambiguite possible.
+-- Key = cle dans VUHDO_NAGA_KEY_SPELLS, Bind = prefixe de touche,
+-- Id = prefixe de l'identifiant de clic.
 local VUHDO_NAGA_MODIFIERS = {
-	{ Attr = "",       Bind = ""       },
-	{ Attr = "shift-", Bind = "SHIFT-" },
-	{ Attr = "ctrl-",  Bind = "CTRL-"  },
-	{ Attr = "alt-",   Bind = "ALT-"   },
+	{ Key = "",       Bind = "",       Id = "vd"  },
+	{ Key = "shift-", Bind = "SHIFT-", Id = "vds" },
+	{ Key = "ctrl-",  Bind = "CTRL-",  Id = "vdc" },
+	{ Key = "alt-",   Bind = "ALT-",   Id = "vda" },
 };
 
 -- Noms releves en jeu (AZERTY, capture OnKeyDown) : WoW normalise les dix
@@ -96,24 +104,26 @@ local VUHDO_NAGA_MODIFIERS = {
 -- qui remonte en ")" et non en "-". Slot 12 a confirmer.
 local VUHDO_NAGA_PHYSICAL_KEYS = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ")", "=" };
 
--- Identifiants de clic. On n'invente pas de nom ("nk1"...) : on reutilise
--- la serie "w5".."w16", celle que VuhDo emploie deja plus bas pour la
--- molette via SetBindingClick + attribut "type<id>". Mecanisme identique,
--- donc identifiants dont le routage est prouve dans ce meme fichier.
--- w1..w4 sont laisses libres (molette haut/bas, avec et sans alt).
-local VUHDO_NAGA_CLICK_IDS = {
-	"w5", "w6", "w7", "w8", "w9", "w10", "w11", "w12", "w13", "w14", "w15", "w16"
-};
+-- Identifiants de clic, construits en "<prefixe><slot>" : vd1..vd12 sans
+-- modificateur, vds1..vds12 en SHIFT, vdc en CTRL, vda en ALT. Soit 48
+-- identifiants tous distincts. Peu importe le nom choisi : ce qui compte
+-- est que l'attribut porte le tiret rendu par SecureButton_GetButtonSuffix.
+local VUHDO_NAGA_CLICK_IDS = { };
+for _, tNagaModi in ipairs(VUHDO_NAGA_MODIFIERS) do
+	VUHDO_NAGA_CLICK_IDS[tNagaModi.Key] = { };
+	for tNagaInit = 1, 12 do
+		VUHDO_NAGA_CLICK_IDS[tNagaModi.Key][tNagaInit] = tNagaModi.Id .. tNagaInit;
+	end
+end
 
 -- Pre-calcul (une seule fois au chargement) d'UNE ligne de binding par
 -- slot. L'assemblage final se fait plus bas, en ne gardant que les sorts
 -- reellement appris : un sort pas encore connu ne doit pas confisquer la
 -- touche pendant le survol, sinon la macro offensive globale ne part plus.
--- Indexe par prefixe d'attribut, puis par slot.
 local VUHDO_NAGA_BINDING_LINES = { };
 for _, tNagaModi in ipairs(VUHDO_NAGA_MODIFIERS) do
-	local tNagaSet = VUHDO_NAGA_KEY_SPELLS[tNagaModi.Attr];
-	VUHDO_NAGA_BINDING_LINES[tNagaModi.Attr] = { };
+	local tNagaSet = VUHDO_NAGA_KEY_SPELLS[tNagaModi.Key];
+	VUHDO_NAGA_BINDING_LINES[tNagaModi.Key] = { };
 
 	if (tNagaSet ~= nil) then
 		for tNagaInit = 1, 12 do
@@ -121,9 +131,9 @@ for _, tNagaModi in ipairs(VUHDO_NAGA_MODIFIERS) do
 			-- string.gsub plutot que strtrim : ce bloc tourne au chargement
 			-- du fichier, avant que les globales FrameXML soient garanties.
 			if (tNagaSpellInit ~= nil and string.gsub(tNagaSpellInit, "%s", "") ~= "") then
-				VUHDO_NAGA_BINDING_LINES[tNagaModi.Attr][tNagaInit] =
+				VUHDO_NAGA_BINDING_LINES[tNagaModi.Key][tNagaInit] =
 					"self:SetBindingClick(0, \"" .. tNagaModi.Bind .. VUHDO_NAGA_PHYSICAL_KEYS[tNagaInit]
-					.. "\", self:GetName(), \"" .. VUHDO_NAGA_CLICK_IDS[tNagaInit] .. "\");\n";
+					.. "\", self:GetName(), \"" .. VUHDO_NAGA_CLICK_IDS[tNagaModi.Key][tNagaInit] .. "\");\n";
 			end
 		end
 	end
@@ -447,8 +457,9 @@ function VUHDO_setupAllHealButtonAttributes(aButton, aUnit, anIsDisable, aForceT
 		and aButton["target"] ~= "focus" and aButton["target"] ~= "target") then
 
 		for _, tNagaModi in ipairs(VUHDO_NAGA_MODIFIERS) do
-			local tNagaSet = VUHDO_NAGA_KEY_SPELLS[tNagaModi.Attr];
-			local tNagaLines = VUHDO_NAGA_BINDING_LINES[tNagaModi.Attr];
+			local tNagaSet = VUHDO_NAGA_KEY_SPELLS[tNagaModi.Key];
+			local tNagaLines = VUHDO_NAGA_BINDING_LINES[tNagaModi.Key];
+			local tNagaIds = VUHDO_NAGA_CLICK_IDS[tNagaModi.Key];
 
 			if (tNagaSet ~= nil and tNagaLines ~= nil) then
 				for tNagaIndex = 1, 12 do
@@ -460,11 +471,12 @@ function VUHDO_setupAllHealButtonAttributes(aButton, aUnit, anIsDisable, aForceT
 
 						-- Le "-" n'est PAS decoratif : SecureButton_GetButtonSuffix()
 						-- renvoie "-"..bouton pour tout nom non standard. Le clic sur
-						-- "w5" fait donc chercher l'attribut "type-w5", pas "typew5".
-						-- Avec modificateur cela donne "shift-type-w5".
+						-- "vds1" fait donc chercher l'attribut "type-vds1".
+						-- Premier argument vide : pas de prefixe de modificateur,
+						-- c'est l'identifiant lui-meme qui porte la distinction.
 						tNagaSnippet = tNagaSnippet .. tNagaLines[tNagaIndex];
-						VUHDO_setupHealButtonAttributes(tNagaModi.Attr,
-							"-" .. VUHDO_NAGA_CLICK_IDS[tNagaIndex], tNagaSpell, aButton, false);
+						VUHDO_setupHealButtonAttributes("",
+							"-" .. tNagaIds[tNagaIndex], tNagaSpell, aButton, false);
 					end
 				end
 			end
