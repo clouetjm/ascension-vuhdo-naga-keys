@@ -31,9 +31,13 @@ local VUHDO_NAGA_KEY_SPELLS = {
 		[7]  = "Emergency Module",                -- defensif             talent
 		[8]  = "Guardian Module",                 -- defensif             talent
 		[9]  = "Stim Augmentation",               -- hors classe, possede
-		[10] = "Nanobot Swarm",                   -- menace / degats      lv27
-		[11] = "Nanobot Deconstruction",          -- degats               talent
-		[12] = "My Greatest Invention!",          -- CD AoE               lv1
+		[10] = "My Greatest Invention!",          -- CD AoE               lv1
+		[11] = "",
+		[12] = "",
+		-- Retires car cibles sur un ennemi : la macro construite par VuhDo
+		-- vise l'allie survole avec un conditionnel "help", un sort
+		-- offensif y repond "pas de cible valide" et la touche est perdue.
+		--   Nanobot Swarm (lv27), Nanobot Deconstruction (talent)
 	},
 
 	-- SHIFT : tout ce qui se pose au sol.
@@ -52,30 +56,29 @@ local VUHDO_NAGA_KEY_SPELLS = {
 		[12] = "",
 	},
 
-	-- CTRL : utilitaire, mobilite, controle.
+	-- CTRL : utilitaire et mobilite, sur soi. Rien de cible sur un ennemi.
 	["ctrl-"] = {
-		[1]  = "Freeze Ray",                      -- controle             talent
-		[2]  = "E.M.P",                           -- talent
-		[3]  = "Anti-Magic Grenades",             -- talent
-		[4]  = "Invisibility Cloak",              -- talent
-		[5]  = "Rocket Boots",                    -- mobilite             talent
-		[6]  = "Parachute Pack",                  -- talent
-		[7]  = "Warphole Generator",              -- talent
-		[8]  = "Tinkering Tools",                 -- talent
-		[9]  = "'Pick Lock'",                     -- lv14
-		[10] = "Landstrider Keys",                -- monture              lv1
-		[11] = "Minicopter-Z",                    -- monture              lv30
-		[12] = "",
+		[1]  = "Invisibility Cloak",              -- talent
+		[2]  = "Rocket Boots",                    -- mobilite             talent
+		[3]  = "Parachute Pack",                  -- talent
+		[4]  = "Warphole Generator",              -- talent
+		[5]  = "Tinkering Tools",                 -- talent
+		[6]  = "'Pick Lock'",                     -- lv14
+		[7]  = "Landstrider Keys",                -- monture              lv1
+		[8]  = "Minicopter-Z",                    -- monture              lv30
+		[9]  = "", [10] = "", [11] = "", [12] = "",
+		-- Retires car cibles sur un ennemi :
+		--   Freeze Ray, E.M.P, Anti-Magic Grenades
 	},
 
-	-- ALT : degats et explosifs.
+	-- ALT : libre. Le jeu contenait les explosifs (Sticky Bomb,
+	-- Deploy Blast Mine, Power Module, Remote Detonation, Deathball) :
+	-- tous cibles sur un ennemi, donc inutilisables par ce mecanisme.
+	-- Les touches ALT restent ainsi disponibles pour tes bindings
+	-- habituels, y compris pendant le survol d'une frame.
 	["alt-"] = {
-		[1]  = "Sticky Bomb",                     -- lv4
-		[2]  = "Deploy Blast Mine",               -- lv1
-		[3]  = "Power Module",                    -- lv4
-		[4]  = "Remote Detonation",               -- talent
-		[5]  = "Deathball",                       -- talent
-		[6]  = "", [7]  = "", [8]  = "",
+		[1]  = "", [2]  = "", [3]  = "", [4]  = "",
+		[5]  = "", [6]  = "", [7]  = "", [8]  = "",
 		[9]  = "", [10] = "", [11] = "", [12] = "",
 	},
 };
