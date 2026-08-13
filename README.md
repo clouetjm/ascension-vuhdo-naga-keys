@@ -32,7 +32,7 @@ VUHDO_NAGA_CONFIG = {
 };
 ```
 
-La configuration livrée couvre **Tinker / Invention** (soigneur). Les contributions pour d'autres classes et spécialisations sont bienvenues.
+La configuration livrée couvre **Tinker / Invention** (soigneur) — voir le [tableau des 48 emplacements](docs/mapping-tinker-invention.md). Les contributions pour d'autres classes et spécialisations sont bienvenues : c'est un nouveau fichier `dist`, sans toucher au code.
 
 ## Trois familles de sorts
 
