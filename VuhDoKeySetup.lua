@@ -3,6 +3,97 @@ VUHDO_FAST_ACCESS_ACTIONS = { };
 
 
 
+-- NAGA LOCAL KEYS ------------------------------------------------
+-- Sorts declenches par les 12 touches UNIQUEMENT pendant le survol
+-- d'une frame VuhDo. Laisser "" pour desactiver un slot.
+--
+-- IMPORTANT : le nom doit etre le nom ANGLAIS du sort.
+-- Le client tourne en locale enUS : GetSpellInfo() et /cast attendent
+-- l'anglais. L'addon AscensionFR ne traduit que l'AFFICHAGE, pas l'API.
+--
+-- Tinker / Invention (healer). Slots 1-6 : sorts ciblables sur un allie,
+-- ils profitent vraiment du survol de frame. Slots 7-12 : zones et
+-- deployables, non cibles sur allie, simplement gardes sous la main.
+
+local VUHDO_NAGA_KEY_SPELLS = {
+	[1]  = "Repair Shot",                    -- touche "1"  soin direct (2s)
+	[2]  = "target",                         -- touche "2"  TEST : cible l'allie survole
+	                                         --             remettre "Zap!" une fois valide
+	[3]  = "Nanobot Reconstruction",         -- touche "3"  HoT
+	[4]  = "Nanobot Cleanser",               -- touche "4"  dissipe poison / maladie
+	[5]  = "Med Pack",                       -- touche "5"  urgence
+	[6]  = "Stim Augmentation",              -- touche "6"  augment (splash des soins directs)
+	[7]  = "Build: Restorative Beacon",      -- touche "7"  zone de soin
+	[8]  = "Build: Shield Beacon",           -- touche "8"  bouclier de zone (possede des lv17)
+	                                         --             alternative plus tard : "Build: ZIGGI-6K"
+	[9]  = "Build: Battery Recharge Station",-- touche "9"  mana
+	[10] = "My Greatest Invention!",         -- touche "0"  CD AoE
+	[11] = "Build: Alarm Beacon",            -- touche ")"  dissipe peur / charme / sommeil
+	[12] = "Build: Noise Box",               -- touche "="  interruption
+};
+
+-- Noms releves en jeu (AZERTY, capture OnKeyDown) : WoW normalise les dix
+-- premieres touches en chiffres malgre le layout, mais PAS la onzieme,
+-- qui remonte en ")" et non en "-". Slot 12 a confirmer.
+local VUHDO_NAGA_PHYSICAL_KEYS = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ")", "=" };
+
+-- Identifiants de clic. On n'invente pas de nom ("nk1"...) : on reutilise
+-- la serie "w5".."w16", celle que VuhDo emploie deja plus bas pour la
+-- molette via SetBindingClick + attribut "type<id>". Mecanisme identique,
+-- donc identifiants dont le routage est prouve dans ce meme fichier.
+-- w1..w4 sont laisses libres (molette haut/bas, avec et sans alt).
+local VUHDO_NAGA_CLICK_IDS = {
+	"w5", "w6", "w7", "w8", "w9", "w10", "w11", "w12", "w13", "w14", "w15", "w16"
+};
+
+-- Pre-calcul (une seule fois au chargement) d'UNE ligne de binding par
+-- slot. L'assemblage final se fait plus bas, en ne gardant que les sorts
+-- reellement appris : un sort pas encore connu ne doit pas confisquer la
+-- touche pendant le survol, sinon la macro offensive globale ne part plus.
+local VUHDO_NAGA_BINDING_LINES = { };
+for tNagaInit = 1, 12 do
+	local tNagaSpellInit = VUHDO_NAGA_KEY_SPELLS[tNagaInit];
+	-- string.gsub plutot que strtrim : ce bloc tourne au chargement du
+	-- fichier, avant que les globales FrameXML soient garanties.
+	if (tNagaSpellInit ~= nil and string.gsub(tNagaSpellInit, "%s", "") ~= "") then
+		VUHDO_NAGA_BINDING_LINES[tNagaInit] =
+			"self:SetBindingClick(0, \"" .. VUHDO_NAGA_PHYSICAL_KEYS[tNagaInit]
+			.. "\", self:GetName(), \"" .. VUHDO_NAGA_CLICK_IDS[tNagaInit] .. "\");\n";
+	end
+end
+-- Sorts REELLEMENT appris. GetSpellInfo() ne convient pas comme filtre :
+-- il repond pour n'importe quel sort existant du jeu, meme non appris,
+-- ce qui confisquerait la touche pendant le survol pour un sort
+-- inlancable. On lit donc le grimoire. Cache construit au premier appel
+-- ou le grimoire repond ; refais /reload apres avoir appris un sort.
+local VUHDO_NAGA_KNOWN = nil;
+local function VUHDO_nagaIsKnown(aName)
+	-- Mots-cles VuhDo : ce ne sont pas des sorts, toujours valides.
+	local tLow = strlower(aName);
+	if (tLow == VUHDO_SPELL_KEY_TARGET or tLow == VUHDO_SPELL_KEY_ASSIST
+		or tLow == VUHDO_SPELL_KEY_FOCUS) then
+		return true;
+	end
+
+	if (VUHDO_NAGA_KNOWN == nil) then
+		local tSet = { };
+		local tIndex = 1;
+		while (true) do
+			local tName = GetSpellName(tIndex, "spell");
+			if (tName == nil) then break; end
+			tSet[tName] = true;
+			tIndex = tIndex + 1;
+		end
+		if (next(tSet) == nil) then return false; end -- grimoire pas pret
+		VUHDO_NAGA_KNOWN = tSet;
+	end
+
+	return VUHDO_NAGA_KNOWN[aName] == true;
+end
+-------------------------------------------------------------------
+
+
+
 -- BURST CACHE ---------------------------------------------------
 
 local VUHDO_RAID_NAMES;
@@ -278,6 +369,30 @@ function VUHDO_setupAllHealButtonAttributes(aButton, aUnit, anIsDisable, aForceT
 		end
 	end
 
+	-- NAGA: assigne les sorts aux identifiants de clic locaux nk1..nk12.
+	-- Uniquement sur les vraies frames de raid (pas les boutons cible/focus),
+	-- pour ne jamais tomber dans la branche VUHDO_HOSTILE_SPELL_ASSIGNMENTS.
+	local tNagaSnippet = "";
+	if (not anIsDisable and not anIsTgButton
+		and VUHDO_BUTTON_CACHE[aButton] ~= nil
+		and aButton["target"] ~= "focus" and aButton["target"] ~= "target") then
+
+		for tNagaIndex = 1, 12 do
+			local tNagaSpell = VUHDO_NAGA_KEY_SPELLS[tNagaIndex];
+			-- Le slot ne s'active qu'une fois le sort REELLEMENT appris.
+			-- Les autres touches restent libres pour leur binding global.
+			if (VUHDO_NAGA_BINDING_LINES[tNagaIndex] ~= nil
+				and VUHDO_nagaIsKnown(tNagaSpell)) then
+
+				-- Le "-" n'est PAS decoratif : SecureButton_GetButtonSuffix()
+				-- renvoie "-"..bouton pour tout nom non standard. Le clic sur
+				-- "w5" fait donc chercher l'attribut "type-w5", pas "typew5".
+				tNagaSnippet = tNagaSnippet .. VUHDO_NAGA_BINDING_LINES[tNagaIndex];
+				VUHDO_setupHealButtonAttributes("", "-" .. VUHDO_NAGA_CLICK_IDS[tNagaIndex], tNagaSpell, aButton, false);
+			end
+		end
+	end
+
 	-- Tooltips and stuff for raid members only (not: target buttons)
 	if (VUHDO_BUTTON_CACHE[aButton] ~= nil) then
 
@@ -307,11 +422,11 @@ function VUHDO_setupAllHealButtonAttributes(aButton, aUnit, anIsDisable, aForceT
 
 					self:SetBindingClick(0, "ALT-CTRL-SHIFT-MOUSEWHEELUP" , self:GetName(), "w15");
 					self:SetBindingClick(0, "ALT-CTRL-SHIFT-MOUSEWHEELDOWN" , self:GetName(), "w16");
-			]=]);
+			]=] .. tNagaSnippet);
 		else
 			aButton:SetAttribute("_onenter", [=[
 				self:ClearBindings();
-			]=]);
+			]=] .. tNagaSnippet);
 		end
 
 
