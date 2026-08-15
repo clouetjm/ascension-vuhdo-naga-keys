@@ -43,11 +43,28 @@ local VUHDO_NAGA_PHYSICAL_KEYS =
 	tNagaLocal.KEYS or tNagaDefaut.KEYS
 	or { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ")", "=" };
 
--- Fusion defaut / local, jeu de touches par jeu de touches.
+-- Un meme compte joue potentiellement plusieurs classes : la config n'est
+-- PAS liee au personnage, elle est chargee identiquement quel que soit
+-- qui se connecte. Un fichier local peut donc definir CLASS_SPELLS,
+-- indexee par la 2e valeur retournee par UnitClass, en plus de SPELLS
+-- (repli valable pour tout le monde). Priorite : cle courante > repli.
+--
+-- ATTENTION, verifie en jeu le 14/08/2026 sur ce serveur : cette valeur
+-- est la SPECIALISATION du personnage ("WILDWALKER"), pas sa classe de
+-- base ("PRIMALIST"). Un respec change donc la cle a utiliser ; prevoir
+-- un bloc CLASS_SPELLS par spe jouee, pas par classe. A verifier :
+--   /run print(UnitClass("player"))    -- le 2e mot est la cle exacte
+local tNagaClassToken = strupper(select(2, UnitClass("player")) or "");
+local tNagaLocalClass  = tNagaLocal.CLASS_SPELLS  and tNagaLocal.CLASS_SPELLS[tNagaClassToken];
+local tNagaDefautClass = tNagaDefaut.CLASS_SPELLS and tNagaDefaut.CLASS_SPELLS[tNagaClassToken];
+
+-- Fusion classe > local > defaut, jeu de touches par jeu de touches.
 local VUHDO_NAGA_KEY_SPELLS = { };
 for _, tNagaModi in ipairs(VUHDO_NAGA_MODIFIERS) do
 	VUHDO_NAGA_KEY_SPELLS[tNagaModi.Key] =
-		(tNagaLocal.SPELLS and tNagaLocal.SPELLS[tNagaModi.Key])
+		(tNagaLocalClass  and tNagaLocalClass[tNagaModi.Key])
+		or (tNagaLocal.SPELLS and tNagaLocal.SPELLS[tNagaModi.Key])
+		or (tNagaDefautClass and tNagaDefautClass[tNagaModi.Key])
 		or (tNagaDefaut.SPELLS and tNagaDefaut.SPELLS[tNagaModi.Key])
 		or { };
 end

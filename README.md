@@ -34,6 +34,33 @@ VUHDO_NAGA_CONFIG = {
 
 La configuration livrée couvre **Tinker / Invention** (soigneur) — voir le [tableau des 48 emplacements](docs/mapping-tinker-invention.md). Les contributions pour d'autres classes et spécialisations sont bienvenues : c'est un nouveau fichier `dist`, sans toucher au code.
 
+### Plusieurs personnages sur le même compte
+
+La configuration n'est pas liée au personnage : elle se charge à l'identique quel que soit qui se connecte. Pour donner un mapping différent à chaque personnage, utilisez `CLASS_SPELLS`, indexé par ce que renvoie `UnitClass("player")` :
+
+```lua
+VUHDO_NAGA_CONFIG = {
+    CLASS_SPELLS = {
+        ["TINKER"] = {
+            [""] = { [1] = "Repair Shot", -- ... },
+        },
+        ["INVENTION"] = {
+            [""] = { [1] = "Flash Heal", -- ... },
+        },
+    },
+};
+```
+
+Chaque bloc surcharge `SPELLS` (le repli commun à tout le monde), jeu de touches par jeu de touches, exactement comme `VUHDO_NAGA_CONFIG` surcharge le `.dist`.
+
+⚠️ Sur ce serveur, **la clé attendue est la spécialisation** (`"WILDWALKER"`), pas la classe de base (`"PRIMALIST"`) — vérifié en jeu. Un changement de spé change donc la clé à utiliser. Avant de renseigner un bloc, confirmez la vôtre :
+
+```
+/run print(UnitClass("player"))
+```
+
+Le deuxième mot affiché est la clé exacte à utiliser.
+
 Pour démarrer une nouvelle configuration, la [référence des sorts par classe](docs/reference-sorts-par-classe.md) liste les sorts actifs des 21 classes propres à Conquest of Azeroth (10 ont une spé de soin) — matière première brute, à vérifier en jeu avant usage.
 
 ## Trois familles de sorts
