@@ -34,6 +34,8 @@ VUHDO_NAGA_CONFIG = {
 
 La configuration livrée couvre **Tinker / Invention** (soigneur) — voir le [tableau des 48 emplacements](docs/mapping-tinker-invention.md). Les contributions pour d'autres classes et spécialisations sont bienvenues : c'est un nouveau fichier `dist`, sans toucher au code.
 
+Pour démarrer une nouvelle configuration, la [référence des sorts par classe](docs/reference-sorts-par-classe.md) liste les sorts actifs des 21 classes propres à Conquest of Azeroth (10 ont une spé de soin) — matière première brute, à vérifier en jeu avant usage.
+
 ## Trois familles de sorts
 
 VuhDo construit ses macros avec un conditionnel `help` visant l'allié survolé. Cela détermine ce qui fonctionne :
