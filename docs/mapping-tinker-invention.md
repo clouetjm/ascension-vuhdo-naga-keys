@@ -8,16 +8,16 @@ Contenu de `VuhDoNagaConfig.dist.lua`. Chaque case est le sort lancé sur l'alli
 | `2` | Nanobot Reconstruction | Build: Shield Beacon | Rocket Boots | — |
 | `3` | Nanobot Cleanser | Build: Replenishment Beacon | Parachute Pack | — |
 | `4` | Med Pack | Build: Alarm Beacon | Warphole Generator | — |
-| `5` | Defibrillate | Build: Battery Recharge Station | Tinkering Tools | — |
+| `5` | Emergency Heal | Build: Battery Recharge Station | Tinkering Tools | Defibrillate |
 | `6` | Maxi-Cleanser X-420 | Build: ZIGGI-6K | 'Pick Lock' | — |
-| `7` | Emergency Module | Build: Bounce Pad! | Landstrider Keys | — |
+| `7` | Kinetic Shield | Build: Bounce Pad! | Landstrider Keys | Emergency Module |
 | `8` | Guardian Module | Build: Portable Sawmill | Minicopter-Z | — |
 | `9` | Stim Augmentation | Overcharge | — | — |
 | `0` | My Greatest Invention! | Battery Swap | — | — |
 | `)` | — | — | — | — |
 | `=` | — | — | — | — |
 
-`—` : slot vide. La touche garde son binding habituel, **y compris pendant le survol d'une frame**. `ALT` est laissé entièrement libre pour conserver douze touches offensives accessibles sans quitter les barres de vie.
+`—` : slot vide. La touche garde son binding habituel, **y compris pendant le survol d'une frame**. `ALT` reste presque entièrement libre, pour conserver des touches offensives accessibles sans quitter les barres de vie — sauf les deux cases ci-dessus, qui servent de repli à des sorts remplacés par des alternatives vérifiées (voir plus bas).
 
 ## Logique de répartition
 
@@ -41,6 +41,8 @@ Contenu de `VuhDoNagaConfig.dist.lua`. Chaque case est le sort lancé sur l'alli
 | Med Pack | 16 |
 | Minicopter-Z | 30 |
 
+`Emergency Heal` et `Kinetic Shield` proviennent de l'arbre de talents, sans niveau fixe.
+
 Les autres proviennent de l'arbre de talents et n'ont pas de niveau fixe. Source : `db.ascension.gg`, classe 28, compétences Invention (100) et base Tinker (480/481).
 
 `Stim Augmentation` ne figure pas dans la base pour Tinker mais est accessible en classless — le grimoire fait autorité, pas la base.
@@ -55,9 +57,18 @@ Les sorts **ciblés sur un ennemi** ne peuvent pas fonctionner : VuhDo construit
 
 ## Slots à surveiller
 
-Certaines entrées ont un champ `rank` vide dans la base — ni `Passive`, ni `Rank N`. Elles sont retenues d'après leur nom, sans certitude qu'elles soient lançables : `Emergency Module`, `Guardian Module`, `Warphole Generator`, `Tinkering Tools`, `Overcharge`, `Battery Swap`.
+Certaines entrées ont un champ `rank` vide dans la base — ni `Passive`, ni `Rank N`. Elles sont retenues d'après leur nom, sans certitude qu'elles soient lançables : `Guardian Module`, `Warphole Generator`, `Tinkering Tools`, `Overcharge`, `Battery Swap`.
 
 Si l'une s'avère être un passif, elle apparaîtra dans le grimoire, le filtre la croira lançable, et **la touche sera confisquée au survol sans que rien ne parte**. Il suffit alors de remettre `""` dans le slot concerné.
+
+`Emergency Module` était dans ce cas — jamais confirmé lançable — et a été déplacé en `ALT-7`, remplacé en touche `7` par `Kinetic Shield`, vérifié en jeu via son infobulle (bouclier magnétique sur un allié, insensibilise au stun, arbre Mechanics).
+
+## Confirmés en jeu
+
+Deux entrées ont été vérifiées directement en jeu, au-delà de la simple présence en base :
+
+- **`Emergency Heal`** — appris et actif, remplace `Defibrillate` en touche `5` (`Defibrillate` déplacé en `ALT-5`, pas perdu).
+- **`Kinetic Shield`** — infobulle lue en jeu : *« Crée un bouclier magnétique sur un allié pendant 8 sec, réduisant les dégâts subis de 40 % et rendant la cible insensible à un effet de stun »*, 227 mana, portée 30 m, incantation instantanée, recharge 5 min.
 
 ## Vérifier ses slots actifs
 

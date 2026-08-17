@@ -44,8 +44,8 @@ VUHDO_NAGA_CONFIG = {
         ["TINKER"] = {
             [""] = { [1] = "Repair Shot", -- ... },
         },
-        ["INVENTION"] = {
-            [""] = { [1] = "Flash Heal", -- ... },
+        ["WILDWALKER"] = {
+            [""] = { [1] = "Hand of the Earthmother", -- ... },
         },
     },
 };
@@ -53,11 +53,13 @@ VUHDO_NAGA_CONFIG = {
 
 Chaque bloc surcharge `SPELLS` (le repli commun à tout le monde), jeu de touches par jeu de touches, exactement comme `VUHDO_NAGA_CONFIG` surcharge le `.dist`.
 
-⚠️ Sur ce serveur, **la clé attendue est la spécialisation** (`"WILDWALKER"`), pas la classe de base (`"PRIMALIST"`) — vérifié en jeu. Un changement de spé change donc la clé à utiliser. Avant de renseigner un bloc, confirmez la vôtre :
+⚠️ **La clé n'est pas toujours le nom de classe.** Vérifié en jeu le 14/08/2026 sur deux personnages : un Primaliste specé Wildwalker renvoie `"WILDWALKER"` (sa spécialisation), tandis qu'un Tinker sans spé dominante (points répartis entre deux arbres) renvoie `"TINKER"` (sa classe de base). Un respec peut donc changer la clé à utiliser. Avant de renseigner un bloc, confirmez la vôtre :
 
 ```
 /run print(UnitClass("player"))
 ```
+
+Le deuxième mot affiché est la clé exacte.
 
 Le deuxième mot affiché est la clé exacte à utiliser.
 

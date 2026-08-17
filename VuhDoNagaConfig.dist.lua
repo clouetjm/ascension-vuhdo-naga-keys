@@ -33,6 +33,10 @@
 --    l'allie survole. Un sort offensif repond qu'il n'a pas de cible
 --    valide, et la touche est perdue pendant le survol.
 --
+--  * Plusieurs personnages, classes differentes sur le meme compte ?
+--    Le fichier LOCAL peut definir CLASS_SPELLS pour surcharger SPELLS
+--    par personnage plutot que pour tout le compte. Voir le README.
+--
 --------------------------------------------------------------------
 
 VUHDO_NAGA_CONFIG_DEFAUT = {
@@ -55,9 +59,9 @@ VUHDO_NAGA_CONFIG_DEFAUT = {
 			[2]  = "Nanobot Reconstruction",          -- HoT                  lv10
 			[3]  = "Nanobot Cleanser",                -- dissipe              lv11
 			[4]  = "Med Pack",                        -- urgence              lv16
-			[5]  = "Defibrillate",                    -- reanimation          lv10
+			[5]  = "Emergency Heal",                  -- soin                 talent
 			[6]  = "Maxi-Cleanser X-420",             -- dissipe ameliore     talent
-			[7]  = "Emergency Module",                -- defensif             talent
+			[7]  = "Kinetic Shield",                  -- bouclier + anti-stun talent
 			[8]  = "Guardian Module",                 -- defensif             talent
 			[9]  = "Stim Augmentation",               -- hors classe
 			[10] = "My Greatest Invention!",          -- CD AoE               lv1
@@ -94,11 +98,15 @@ VUHDO_NAGA_CONFIG_DEFAUT = {
 			[9]  = "", [10] = "", [11] = "", [12] = "",
 		},
 
-		-- ALT : libre, pour garder douze touches offensives disponibles
-		-- meme au-dessus des barres de vie.
+		-- ALT : libre pour l'essentiel, garde douze touches offensives
+		-- disponibles meme au-dessus des barres de vie. Sert aussi de
+		-- repli pour deux sorts remplaces ci-dessus par des alternatives
+		-- verifiees en jeu (voir docs/mapping-tinker-invention.md).
 		["alt-"] = {
 			[1]  = "", [2]  = "", [3]  = "", [4]  = "",
-			[5]  = "", [6]  = "", [7]  = "", [8]  = "",
+			[5]  = "Defibrillate",                    -- reanimation          lv10
+			[6]  = "", [7]  = "Emergency Module",     -- defensif, non confirme lancable
+			[8]  = "",
 			[9]  = "", [10] = "", [11] = "", [12] = "",
 		},
 	},
